@@ -1,183 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NTR District Drone Live</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NTR District Drone Live</title>
 
-  <!-- HLS.js -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f4f6f9;
-      font-family: "Segoe UI", Arial, sans-serif;
-      overflow: hidden;
-    }
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background: #f4f6f9;
+  font-family: "Segoe UI", Arial, sans-serif;
+  overflow: hidden;
+}
 
-    /* Header */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      background: white;
-      border-bottom: 2px solid #ddd;
-      padding: 12px;
-      font-size: 22px;
-      font-weight: 700;
-      text-align: center;
-      color: #111;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: white;
+  border-bottom: 2px solid #ddd;
+  padding: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: #111;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
 
-    /* Logos */
-    .logos {
-      position: absolute;
-      left: 15px;
-      display: flex;
-      gap: 12px;
-    }
+/* Logos */
+.logos {
+  position: absolute;
+  left: 15px;
+  display: flex;
+  gap: 12px;
+}
 
-    .logos img {
-      height: 55px;
-      width: auto;
-    }
+.logos img {
+  height: 55px;
+}
 
-    /* Status */
-    .status {
-      position: absolute;
-      right: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: #eafbea;
-      color: green;
-      border: 1px solid #b7e3b7;
-    }
+/* Status */
+.status {
+  position: absolute;
+  right: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #eafbea;
+  color: green;
+  border: 1px solid #b7e3b7;
+}
 
-    .status.reconnecting {
-      background: #fff7e6;
-      color: #d17b00;
-      border: 1px solid #ffd591;
-    }
+.status.reconnecting {
+  background: #fff7e6;
+  color: #d17b00;
+  border: 1px solid #ffd591;
+}
 
-    /* Video Container */
-    .video-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 90vh;
-      width: 100%;
-      padding: 15px;
-    }
+/* Landing buttons */
+.landing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 85vh;
+  gap: 40px;
+}
 
-    video {
-      width: 90%;
-      height: 100%;
-      border-radius: 14px;
-      border: 2px solid #bbb;
-      background: black;
-      box-shadow: 0px 6px 18px rgba(0,0,0,0.15);
-    }
-  </style>
+.view-btn {
+  padding: 20px 50px;
+  font-size: 22px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #0d6efd;
+  color: white;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  transition: 0.2s;
+}
+
+.view-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Grid */
+.grid {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  height: 85vh;
+  width: 100%;
+  padding: 10px;
+  gap: 10px;
+}
+
+.stream {
+  position: relative;
+  background: black;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.label {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  background: rgba(0,0,0,0.4);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+</style>
 </head>
 
 <body>
 
-  <!-- Header -->
-  <div class="header">
-
-    <!-- Logos -->
-    <div class="logos">
-      <img src="logo1.png" alt="Logo 1">
-      <img src="logo2.png" alt="Logo 2">
-    </div>
-
-    డ్రగ్స్ పై దండయాత్ర <br>
-    NTR District Drone Live Link
-
-    <!-- Live Status -->
-    <div id="statusBox" class="status">LIVE</div>
+<!-- Header -->
+<div class="header">
+  <div class="logos">
+    <img src="logo1.png" alt="Logo 1">
+    <img src="logo2.png" alt="Logo 2">
   </div>
 
-  <!-- Video -->
-  <div class="video-container">
-    <video id="video" controls autoplay muted></video>
-  </div>
+  డ్రగ్స్ పై దండయాత్ర <br>
+  NTR District Drone Live Link
 
-  <script>
-    const video = document.getElementById("video");
-    const statusBox = document.getElementById("statusBox");
+  <div id="statusBox" class="status">LIVE</div>
+</div>
 
-    const streamUrl = "http://49.204.168.164/hls/cam1.m3u8";
+<!-- Landing Page -->
+<div id="landing" class="landing">
+  <button class="view-btn" onclick="showMorning()">Morning View</button>
+  <button class="view-btn" onclick="showEvening()">Evening View</button>
+</div>
 
-    let hls;
-    let retryInterval;
+<!-- Stream Grid -->
+<div id="grid" class="grid"></div>
 
-    function setStatusLive() {
-      statusBox.innerText = "LIVE";
-      statusBox.className = "status";
-    }
+<script>
+const statusBox = document.getElementById("statusBox");
+const grid = document.getElementById("grid");
+const landing = document.getElementById("landing");
 
-    function setStatusReconnecting() {
-      statusBox.innerText = "RECONNECTING...";
-      statusBox.className = "status reconnecting";
-    }
+let currentStreams = [];
+let retryInterval;
 
-    function startStream() {
-      if (hls) {
-        hls.destroy();
+const morningStreams = [
+  { name: "Gunadala PS", url: "http://49.204.168.164/live/Gunadala_Ps.m3u8" },
+  { name: "Machavaram PS", url: "http://49.204.168.164/live/Machavaram_Ps.m3u8" },
+  { name: "Patamata PS", url: "http://49.204.168.164/live/Patamata_PS.m3u8" }
+];
+
+const eveningStreams = [
+  { name: "2 Town PS", url: "http://49.204.168.164/live/2_town_ps.m3u8" },
+  { name: "Bhavanipuram PS", url: "http://49.204.168.164/live/Bhavanipuram_Ps.m3u8" },
+  { name: "Nunna PS", url: "http://49.204.168.164/live/Nunna_Ps.m3u8" }
+];
+
+function setStatusLive() {
+  statusBox.innerText = "LIVE";
+  statusBox.className = "status";
+}
+
+function setStatusReconnecting() {
+  statusBox.innerText = "RECONNECTING...";
+  statusBox.className = "status reconnecting";
+}
+
+function startStream(video, url) {
+  let hls;
+
+  if (Hls.isSupported()) {
+    hls = new Hls({
+      maxBufferLength: 10,
+      liveSyncDuration: 3,
+    });
+
+    hls.loadSource(url);
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      setStatusLive();
+    });
+
+    hls.on(Hls.Events.ERROR, () => {
+      setStatusReconnecting();
+    });
+
+  } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    setStatusLive();
+  }
+}
+
+function loadStreams(streams) {
+  grid.innerHTML = "";
+  currentStreams = streams;
+
+  streams.forEach(stream => {
+    const container = document.createElement("div");
+    container.className = "stream";
+
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    // Double-click fullscreen
+    container.ondblclick = () => {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
       }
+    };
 
-      if (Hls.isSupported()) {
-        hls = new Hls({
-          maxBufferLength: 10,
-          liveSyncDuration: 3,
-        });
+    const label = document.createElement("div");
+    label.className = "label";
+    label.innerText = stream.name;
 
-        hls.loadSource(streamUrl);
-        hls.attachMedia(video);
+    container.appendChild(video);
+    container.appendChild(label);
+    grid.appendChild(container);
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setStatusLive();
-        });
+    startStream(video, stream.url);
+  });
+}
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.log("Stream Error:", data);
+function showMorning() {
+  landing.style.display = "none";
+  grid.style.display = "grid";
+  loadStreams(morningStreams);
+}
 
-          setStatusReconnecting();
+function showEvening() {
+  landing.style.display = "none";
+  grid.style.display = "grid";
+  loadStreams(eveningStreams);
+}
 
-          if (!retryInterval) {
-            retryInterval = setInterval(() => {
-              console.log("Retrying stream...");
-              startStream();
-            }, 5000);
-          }
-        });
-
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = streamUrl;
-        setStatusLive();
-      } else {
-        alert("HLS not supported in this browser.");
-      }
-    }
-
-    // Start initially
-    startStream();
-
-    // Subtle Refresh Every 5 Seconds (Keeps live smooth)
-    setInterval(() => {
-      if (video.paused || video.readyState < 2) {
-        console.log("Refreshing stream...");
-        startStream();
-      }
-    }, 5000);
-  </script>
+// Subtle refresh
+setInterval(() => {
+  if (grid.style.display === "grid") {
+    loadStreams(currentStreams);
+  }
+}, 5000);
+</script>
 
 </body>
 </html>
